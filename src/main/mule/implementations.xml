@@ -5,17 +5,13 @@
 	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
-	<flow name="Copy_of_get:\users\(user_id)\events:user-system-api-config" doc:id="8a1c23c8-0590-452d-857c-616498ec5fca" >
+	<flow name="getEventsOfaUser" doc:id="8a1c23c8-0590-452d-857c-616498ec5fca" >
 		<db:select doc:name="Select" doc:id="66d95dc2-a8a1-4dc6-ab6e-43839442ff6c" config-ref="meetings_db">
-			<db:sql ><![CDATA[SELECT events.*, status.name AS statusName, categories.name AS categoriesName, users.id AS userId, users.name, users.lastName, users.avatarUrl, event_images.*
-FROM (events, users_events_roles)
-    INNER JOIN categories ON events.category_id = categories.id
-    INNER JOIN status ON events.status_id = status.id
-    INNER JOIN users ON users_events_roles.user_id = users.id
-    INNER JOIN event_images ON event_images.event_id = events.id
-WHERE users.id = :user_id;]]></db:sql>
+			<db:sql ><![CDATA[SELECT * FROM events
+INNER JOIN users ON events.]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
-'user_id': attributes.uriParams.user_id 
+'user_id': attributes.uriParams.user_id,
+
 }]]]></db:input-parameters>
 		</db:select>
 		<ee:transform doc:name="Copy_of_Transform Message" doc:id="2d7d5b93-eacf-4734-ae84-ba25590ea036" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" >
@@ -46,6 +42,29 @@ output application/java
 		lastName: payload.lastName,
 		avatarUrl: payload.avatarUrl
 	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getUserId" doc:id="eb0818de-d01e-4b6d-91e9-8932cf62ed2f" >
+		<db:select doc:name="Select" doc:id="072218cb-72a8-4227-9d1f-413e01b74a39" config-ref="meetings_db">
+			<db:sql ><![CDATA[SELECT * FROM users
+WHERE id = :user_id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'user_id': attributes.uriParams.user_id
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="dc602e4b-adc6-410c-8c92-b4a0505dec59" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	id: payload.id,
+	name: payload.name,
+	lastName: payload.lastName,
+	email: payload.email,
+	avatarUrl: payload.avatarUrl
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
