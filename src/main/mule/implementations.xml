@@ -7,14 +7,14 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
 	<flow name="getEventsOfaUser" doc:id="8a1c23c8-0590-452d-857c-616498ec5fca" >
 		<db:select doc:name="Select" doc:id="66d95dc2-a8a1-4dc6-ab6e-43839442ff6c" config-ref="meetings_db">
-			<db:sql ><![CDATA[SELECT * FROM events
-INNER JOIN users ON events.]]></db:sql>
+			<db:sql ><![CDATA[SELECT events.*,users_events_roles.user_id FROM events
+INNER JOIN users_events_roles ON users_events_roles.event_id = events.id
+WHERE users_events_roles.user_id = :user_id]]></db:sql>
 			<db:input-parameters ><![CDATA[#[{
 'user_id': attributes.uriParams.user_id,
-
 }]]]></db:input-parameters>
 		</db:select>
-		<ee:transform doc:name="Copy_of_Transform Message" doc:id="2d7d5b93-eacf-4734-ae84-ba25590ea036" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" >
+		<ee:transform doc:name="JSON" doc:id="2d7d5b93-eacf-4734-ae84-ba25590ea036" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/java
@@ -37,7 +37,7 @@ output application/java
 		name: payload.categoriesName
 	},
 	user: {
-		id: payload.userId,
+		id: payload.user_id,
 		name: payload.name,
 		lastName: payload.lastName,
 		avatarUrl: payload.avatarUrl
@@ -54,7 +54,7 @@ WHERE id = :user_id]]></db:sql>
 	'user_id': attributes.uriParams.user_id
 }]]]></db:input-parameters>
 		</db:select>
-		<ee:transform doc:name="Transform Message" doc:id="dc602e4b-adc6-410c-8c92-b4a0505dec59" >
+		<ee:transform doc:name="JSON" doc:id="dc602e4b-adc6-410c-8c92-b4a0505dec59" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
