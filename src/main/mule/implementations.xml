@@ -46,17 +46,22 @@ output application/java
 			</ee:message>
 		</ee:transform>
 	</flow>
-	<flow name="getUserId" doc:id="eb0818de-d01e-4b6d-91e9-8932cf62ed2f" >
+	<sub-flow name="getUserId" doc:id="a7509960-2622-48ff-aed8-336ce74d72b8" >
 		<db:select doc:name="Select" doc:id="072218cb-72a8-4227-9d1f-413e01b74a39" config-ref="meetings_db">
-			<db:sql ><![CDATA[SELECT * FROM users
+			<db:sql><![CDATA[SELECT * FROM users
 WHERE id = :user_id]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{
+			<db:input-parameters><![CDATA[#[{
 	'user_id': attributes.uriParams.user_id
 }]]]></db:input-parameters>
 		</db:select>
-		<ee:transform doc:name="JSON" doc:id="dc602e4b-adc6-410c-8c92-b4a0505dec59" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+		<choice doc:name="Choice" doc:id="e5096252-0dbb-486b-b177-b4b736197cce">
+			<when expression="#[isEmpty(payload) == true]">
+				<raise-error doc:name="user not found" doc:id="e915cde5-0341-47b2-b86e-36c8e1304d28" type="SYSTEM:NOT_FOUND"/>
+			</when>
+		</choice>
+		<ee:transform doc:name="JSON" doc:id="dc602e4b-adc6-410c-8c92-b4a0505dec59">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 {
@@ -68,5 +73,5 @@ output application/json
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-	</flow>
+	</sub-flow>
 </mule>
