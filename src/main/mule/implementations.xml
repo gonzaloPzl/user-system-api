@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<flow name="getEventsOfaUser" doc:id="8a1c23c8-0590-452d-857c-616498ec5fca" >
+		<db:select doc:name="Select" doc:id="66d95dc2-a8a1-4dc6-ab6e-43839442ff6c" config-ref="meetings_db">
+			<db:sql ><![CDATA[SELECT events.*,users_events_roles.user_id FROM events
+INNER JOIN users_events_roles ON users_events_roles.event_id = events.id
+WHERE users_events_roles.user_id = :user_id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+'user_id': attributes.uriParams.user_id,
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="JSON" doc:id="2d7d5b93-eacf-4734-ae84-ba25590ea036" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	id: payload.id,
+	title: payload.title,
+	description: payload.description,
+	lat: payload.lat,
+	lng: payload.lng,
+	startDate: payload.startDate as String,
+	endDate: payload.endDate as String,
+	hidden: payload.hidden,
+	status: {
+		id: payload.status_id,
+		name: payload.statusName
+	},
+	category: {
+		id: payload.category_id,
+		name: payload.categoriesName
+	},
+	user: {
+		id: payload.user_id,
+		name: payload.name,
+		lastName: payload.lastName,
+		avatarUrl: payload.avatarUrl
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getUserId" doc:id="eb0818de-d01e-4b6d-91e9-8932cf62ed2f" >
+		<db:select doc:name="Select" doc:id="072218cb-72a8-4227-9d1f-413e01b74a39" config-ref="meetings_db">
+			<db:sql ><![CDATA[SELECT * FROM users
+WHERE id = :user_id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'user_id': attributes.uriParams.user_id
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="JSON" doc:id="dc602e4b-adc6-410c-8c92-b4a0505dec59" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	id: payload.id[0],
+	name: payload.name[0],
+	lastName: payload.lastName[0],
+	email: payload.email[0],
+	avatarUrl: payload.avatarUrl[0]
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
